@@ -1,0 +1,37 @@
+%pip install matplotlib
+%pip install opencv-python
+import cv2
+import matplotlib.pyplot as plt
+config_file='ssd_mobilenet_v3_large_coco_2020_01_14.pbtxt'
+frozen_model='frozen_inference_graph.pb'
+classlabels = []
+file_name = 'label.txt'
+with open(file_name,'rt') as fpt:
+    classlabels=fpt.read().rstrip('\n').split('\n')
+plt.show(classlabels)
+model = cv2.dnn.DetectionModel(frozen_model,config_file)
+model.setInputSize(320,320)
+model.setInputScale(1.0/127.5)## 255/2=127.5
+model.setInputMean((127.5,127.5,127.5))
+model.setInputSwapRB(True)
+cam =cv2.VideoCapture('project.mp4')
+if not cam.isOpened():
+    cam=VideoCapture()
+if not cam.isOpened():
+    raise IOError("can not open Video")
+font_scale=1
+font=cv2.FONT_HERSHEY_PLAIN
+while True:
+    ret,frame=cam.read()
+    ClassIndex,confidece,bbox=model.detect(frame)
+    print(ClassIndex)
+    if (len(ClassIndex)!=80):
+        for ClassInd ,conf,boxes in zip(ClassIndex.flatten(),confidece.flatten(),bbox):
+            if(ClassInd<=80):
+                cv2.rectangle(frame,boxes,(255,0,0),2)
+                cv2.putText(frame,classlabels[ClassInd-1],(boxes[0]+10,boxes[1]+40), font, fontScale = font_scale,color=(0,255,0),thickness=2) 
+    cv2.imshow('Object Detection Tutorial ',frame)
+    if cv2.waitKey(2) & 0xFF ==ord('q'):
+        break
+cam.release()
+cv2.destroyAllWindows()
